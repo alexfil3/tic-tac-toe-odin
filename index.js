@@ -1,23 +1,18 @@
 const gameBoard = (function () {
-  /* state */
   const rows = 3;
   const columns = 3;
   const board = [];
-  /* state */
 
-  /* build the board */
   for (let i = 0; i < rows; i++) {
     board[i] = [];
     for (let j = 0; j < columns; j++) {
-      board[i].push(Cell());
+      board[i].push(cell());
     }
   }
-  /* build the board */
 
   // Method to help render our board on the page
   const getBoard = () => board;
 
-  // Method for adding a marker to the board
   const addMarker = (player, cell) => {
     const row = cell[0];
     const column = cell[1];
@@ -31,7 +26,7 @@ const gameBoard = (function () {
       return "cell is taken";
     }
 
-    board[row][column].setValue(player.marker);
+    board[row][column].setValue(player.getMarker());
   };
 
   // Method that displays our board for us in the console, only for the console version
@@ -54,15 +49,20 @@ const gameBoard = (function () {
     return numberOfAvailableCells;
   };
 
+  const clearBoard = () => {
+    board.forEach((row) => row.forEach((cell) => cell.setValue(null)));
+  };
+
   return {
     getBoard,
     addMarker,
     printBoard,
     hasAvailableCells,
+    clearBoard,
   };
 })();
 
-function Cell() {
+function cell() {
   let value = null;
 
   const getValue = () => value;
@@ -77,21 +77,54 @@ function Cell() {
   };
 }
 
-function GameController(player1 = "Player 1", player2 = "Player 2") {
+function player(playerName, playerMarker) {
+  const name = playerName;
+  const marker = playerMarker;
+  let score = 0;
+
+  const getName = () => {
+    return name;
+  };
+
+  const getMarker = () => {
+    return marker;
+  };
+
+  const getScore = () => {
+    return score;
+  };
+
+  const setScore = () => {
+    score++;
+  };
+
+  return {
+    getName,
+    getMarker,
+    getScore,
+    setScore,
+  };
+}
+
+const gameController = (function () {
   const board = gameBoard;
+  const winningNumber = 4;
+  const players = [];
 
-  const players = [
-    {
-      name: player1,
-      marker: "X",
-    },
-    {
-      name: player2,
-      marker: "O",
-    },
-  ];
+  let activePlayer;
 
-  let activePlayer = players[0];
+  const makePlayer = (name) => {
+    if (players.length > 1) {
+      console.log("You can not add more than two players to this game");
+      return;
+    }
+    if (players.length < 1) {
+      players.push(player(name || "Player 1", "X"));
+      activePlayer = players[0];
+    } else {
+      players.push(player(name || "Player 2", "O"));
+    }
+  };
 
   const getActivePlayer = () => activePlayer;
 
@@ -101,7 +134,7 @@ function GameController(player1 = "Player 1", player2 = "Player 2") {
 
   const printNewRound = () => {
     board.printBoard();
-    console.log(`Now ${getActivePlayer().name} it's your turn`);
+    console.log(`Now ${getActivePlayer().getName()} it's your turn`);
   };
 
   const playRound = (cell) => {
@@ -109,18 +142,36 @@ function GameController(player1 = "Player 1", player2 = "Player 2") {
       console.log("Game is over, no free cells");
     }
 
-    console.log(`Adding ${getActivePlayer().name}'s marker to the board`);
+    if (isWinner(board.getBoard())) {
+      console.log(
+        "Clear the board before starting a new game. Use resetBoard() method"
+      );
+
+      return;
+    }
+
+    console.log(`Adding ${getActivePlayer().getName()}'s marker to the board`);
 
     if (board.addMarker(getActivePlayer(), cell) !== "cell is taken") {
-      if (isWinner(board.getBoard(), activePlayer)) {
+      if (isWinner(board.getBoard())) {
         board.printBoard();
-        console.log(`${getActivePlayer().name} is a winner`);
+        console.log(`${getActivePlayer().getName()} is a winner`);
+        getActivePlayer().setScore();
+        if (getActivePlayer().getScore() === winningNumber) {
+          console.log(`${getActivePlayer().getName()} is a Winner`);
+        }
         return;
       }
 
       switchActivePlayer();
       printNewRound();
     }
+  };
+
+  const resetBoard = () => {
+    board.clearBoard();
+    board.printBoard();
+    console.log("You had successfully cleared the board");
   };
 
   const isWinner = (board) => {
@@ -190,8 +241,10 @@ function GameController(player1 = "Player 1", player2 = "Player 2") {
   };
 
   return {
+    makePlayer,
     playRound,
+    resetBoard,
   };
-}
+})();
 
-const game = GameController();
+const game = gameController;
