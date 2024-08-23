@@ -5,10 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Alex Filimonov">
     <meta name="description" content="Basic Tic Tac Toe game to reveal on js skills">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Matemasie&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <title>Tic Tac Toe Game</title>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1 class="title">Tic Tac Toe</h1>
+        </header>
+        <main class="main">
+            <form class="form">
+                <div class="inputs-wrapper">
+                    <div class="input-wrapper">
+                        <label class="label" for="firstPlayerName">Player 1 (X)</label>
+                        <input class="input" type="text" id="firstPlayerName" name="firstPlayerName">
+                    </div>
+                    <div class="input-wrapper">
+                        <label class="label" for="secondPlayerName">Player 2 (O)</label>
+                        <input class="input" type="text" id="secondPlayerName" name="secondPlayerName">
+                    </div>
+                </div>
+                <button class="button" type="submit">Start</button>
+            </form>
+            <div class="game-wrapper">
+                <div class="players-score-wrapper">
+                    <p class="player-score" id="player-1"></p>
+                    <p class="player-score" id="player-2"></p>
+                </div>
+                <p class="turn">turn</p>
+                <div class="field">
+                    Board
+                </div>
+                <button class="button" id="clear" type="button">Clear</button>
+            </div>
+            <dialog class="dialog">
+                <div class="dialog-inner">
+                    <p class="winner"></p>
+                    <form method="dialog">
+                        <button class="button win">OK</button>
+                    </form>
+                </div>
+            </dialog>
+        </main>
+        <footer></footer>
+    </div>
     <script src="./index.js"></script>
 </body>
 </html>

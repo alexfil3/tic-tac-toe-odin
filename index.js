@@ -2,49 +2,46 @@ const gameBoard = (function () {
   const rows = 3;
   const columns = 3;
   const board = [];
+  let id = 1;
 
   for (let i = 0; i < rows; i++) {
     board[i] = [];
     for (let j = 0; j < columns; j++) {
-      board[i].push(cell());
+      board[i].push({ ...cell(), id });
+      id++;
     }
   }
 
-  // Method to help render our board on the page
   const getBoard = () => board;
 
-  const addMarker = (player, cell) => {
-    const row = cell[0];
-    const column = cell[1];
+  const addMarker = (player, cellId) => {
+    const marker = player.getMarker();
 
-    if (board[row][column].getValue() !== null) {
-      console.log(
-        `This cell is already taken by ${board[row][
-          column
-        ].getValue()} value. We can't add it to the board. Try again`
-      );
-      return "cell is taken";
+    for (let i = 0; i < board.length; i++) {
+      board[i];
+
+      for (let j = 0; j < board[i].length; j++) {
+        if (board[i][j].id === cellId) {
+          if (board[i][j].getValue() !== null) {
+            return "cell is taken";
+          }
+
+          board[i][j].setValue(marker);
+        }
+      }
     }
-
-    board[row][column].setValue(player.getMarker());
-  };
-
-  // Method that displays our board for us in the console, only for the console version
-  const printBoard = () => {
-    const printedBoard = board.map((row) => row.map((cell) => cell.getValue()));
-    console.log(printedBoard);
   };
 
   const hasAvailableCells = () => {
     let numberOfAvailableCells = 0;
 
-    board.forEach((row) =>
+    board.forEach((row) => {
       row.forEach((cell) => {
         if (cell.getValue() === null) {
-          numberOfAvailableCells += 1;
+          numberOfAvailableCells++;
         }
-      })
-    );
+      });
+    });
 
     return numberOfAvailableCells;
   };
@@ -56,7 +53,6 @@ const gameBoard = (function () {
   return {
     getBoard,
     addMarker,
-    printBoard,
     hasAvailableCells,
     clearBoard,
   };
@@ -82,20 +78,18 @@ function player(playerName, playerMarker) {
   const marker = playerMarker;
   let score = 0;
 
-  const getName = () => {
-    return name;
-  };
+  const getName = () => name;
 
-  const getMarker = () => {
-    return marker;
-  };
+  const getMarker = () => marker;
 
-  const getScore = () => {
-    return score;
-  };
+  const getScore = () => score;
 
   const setScore = () => {
     score++;
+  };
+
+  const resetScore = () => {
+    score = 0;
   };
 
   return {
@@ -103,6 +97,7 @@ function player(playerName, playerMarker) {
     getMarker,
     getScore,
     setScore,
+    resetScore,
   };
 }
 
@@ -114,10 +109,6 @@ const gameController = (function () {
   let activePlayer;
 
   const makePlayer = (name) => {
-    if (players.length > 1) {
-      console.log("You can not add more than two players to this game");
-      return;
-    }
     if (players.length < 1) {
       players.push(player(name || "Player 1", "X"));
       activePlayer = players[0];
@@ -126,52 +117,32 @@ const gameController = (function () {
     }
   };
 
+  const getPlayers = () => players;
+
   const getActivePlayer = () => activePlayer;
+
+  const setActivePlayer = (player) => {
+    activePlayer = player;
+  };
 
   const switchActivePlayer = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
   };
 
-  const printNewRound = () => {
-    board.printBoard();
-    console.log(`Now ${getActivePlayer().getName()} it's your turn`);
-  };
-
-  const playRound = (cell) => {
-    if (!board.hasAvailableCells()) {
-      console.log("Game is over, no free cells");
-    }
-
-    if (isWinner(board.getBoard())) {
-      console.log(
-        "Clear the board before starting a new game. Use resetBoard() method"
-      );
-
-      return;
-    }
-
-    console.log(`Adding ${getActivePlayer().getName()}'s marker to the board`);
-
-    if (board.addMarker(getActivePlayer(), cell) !== "cell is taken") {
+  const playRound = (cellId) => {
+    if (board.addMarker(getActivePlayer(), cellId) !== "cell is taken") {
       if (isWinner(board.getBoard())) {
-        board.printBoard();
-        console.log(`${getActivePlayer().getName()} is a winner`);
         getActivePlayer().setScore();
-        if (getActivePlayer().getScore() === winningNumber) {
-          console.log(`${getActivePlayer().getName()} is a Winner`);
-        }
+
         return;
       }
 
       switchActivePlayer();
-      printNewRound();
     }
   };
 
   const resetBoard = () => {
     board.clearBoard();
-    board.printBoard();
-    console.log("You had successfully cleared the board");
   };
 
   const isWinner = (board) => {
@@ -241,10 +212,122 @@ const gameController = (function () {
   };
 
   return {
+    getBoard: board.getBoard(),
+    setActivePlayer,
     makePlayer,
     playRound,
     resetBoard,
+    getPlayers,
+    getActivePlayer,
+    isWinner,
+    winningNumber,
   };
 })();
 
-const game = gameController;
+function screenController() {
+  const game = gameController;
+  const form = document.querySelector(".form");
+  const gameWrapper = document.querySelector(".game-wrapper");
+  const field = document.querySelector(".field");
+  const turn = document.querySelector(".turn");
+  const clearButton = document.querySelector("#clear");
+  const dialog = document.querySelector("dialog");
+  const winner = document.querySelector(".winner");
+
+  const updateScreen = () => {
+    let id = 1;
+    field.textContent = "";
+    const board = game.getBoard;
+    const activePlayer = game.getActivePlayer();
+    const firstPlayerSpot = document.querySelector("#player-1");
+    const secondPlayerSpot = document.querySelector("#player-2");
+    turn.textContent = `${activePlayer.getName()}'s turn...`;
+
+    firstPlayerSpot.textContent = `${game
+      .getPlayers()[0]
+      .getName()} score ${game.getPlayers()[0].getScore()}`;
+
+    secondPlayerSpot.textContent = `${game
+      .getPlayers()[1]
+      .getName()} score ${game.getPlayers()[1].getScore()}`;
+
+    if (game.isWinner(board)) {
+      turn.textContent = `${activePlayer.getName()} has won this round`;
+      game.setActivePlayer(game.getPlayers()[0]);
+    }
+
+    board.forEach((row) => {
+      row.forEach((cell) => {
+        const button = document.createElement("button");
+        button.classList.add("cell");
+        button.textContent = cell.getValue() === null ? "" : cell.getValue();
+        button.setAttribute("id", id);
+        field.appendChild(button);
+        id++;
+      });
+    });
+
+    id = 1;
+  };
+
+  form.addEventListener("submit", startGame);
+
+  function startGame(e) {
+    e.preventDefault();
+    const firstPlayerName = form.querySelector("#firstPlayerName").value;
+    const secondPlayerName = form.querySelector("#secondPlayerName").value;
+    const firstPlayerSpot = document.querySelector("#player-1");
+    const secondPlayerSpot = document.querySelector("#player-2");
+    game.makePlayer(firstPlayerName);
+    game.makePlayer(secondPlayerName);
+    const firstPlayer = game.getPlayers()[0];
+    const secondPlayer = game.getPlayers()[1];
+
+    firstPlayerSpot.textContent =
+      firstPlayer.getName() + " score " + firstPlayer.getScore();
+    secondPlayerSpot.textContent =
+      secondPlayer.getName() + " score " + secondPlayer.getScore();
+
+    form.style.display = "none";
+    gameWrapper.style.display = "flex";
+
+    updateScreen();
+  }
+
+  field.addEventListener("click", addMarker);
+
+  function addMarker(e) {
+    const id = Number(e.target.id);
+
+    game.playRound(id);
+
+    updateScreen();
+
+    if (game.getPlayers()[0].getScore() === game.winningNumber) {
+      winner.textContent = `${game.getPlayers()[0].getName()} is a Winner!`;
+      dialog.showModal();
+    } else if (game.getPlayers()[1].getScore() === game.winningNumber) {
+      winner.textContent = `${game.getPlayers()[1].getName()} is a Winner!`;
+      dialog.showModal();
+    }
+  }
+
+  clearButton.addEventListener("click", clearBoard);
+
+  function clearBoard() {
+    game.resetBoard();
+
+    updateScreen();
+  }
+
+  dialog.addEventListener("close", closeDialog);
+
+  function closeDialog() {
+    game.resetBoard();
+    game.getPlayers()[0].resetScore();
+    game.getPlayers()[1].resetScore();
+    updateScreen();
+  }
+}
+
+screenController();
